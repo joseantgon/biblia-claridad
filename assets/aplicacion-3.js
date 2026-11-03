@@ -1,0 +1,1 @@
+document.querySelectorAll("img").forEach(i=>{const k=i.getAttribute("src");if(window.claridadExportResources[k])i.src=window.claridadExportResources[k]});
