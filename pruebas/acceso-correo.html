@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prueba de acceso — Biblia Claridad</title><style>body{font:16px system-ui;max-width:480px;margin:5vh auto;padding:20px;color:#202c35}input,button{box-sizing:border-box;width:100%;padding:13px;margin:8px 0;font:inherit}button{background:#235c50;color:white;border:0;border-radius:8px}#estado{white-space:pre-wrap}small{color:#555}</style></head>
-<body><h1>Biblia Claridad</h1><p>Prueba independiente de inicio de sesión por correo. No modifica notas, favoritos ni lecturas.</p>
+<body><h1>Biblia Claridad</h1><p>Acceso independiente mediante correo electrónico. No necesitas ChatGPT. Esta prueba no modifica notas, favoritos ni lecturas.</p>
 <label for="correo">Correo electrónico</label><input id="correo" type="email" autocomplete="email" placeholder="tu@correo.com"><button id="enviar">Enviarme enlace de acceso</button><button id="salir" hidden>Cerrar sesión</button><p id="estado" role="status"></p><small>Usa esta prueba únicamente desde una dirección HTTPS autorizada en Supabase. Abrir el archivo localmente (file://) no sirve para comprobar el retorno del enlace.</small>
 <script type="module">
 import {claridadSupabase,enviarEnlaceCorreo,cerrarSesion} from "../assets/supabase-cuenta.js";
 const estado=document.querySelector("#estado"),enviar=document.querySelector("#enviar"),salir=document.querySelector("#salir");
 function aviso(m){estado.textContent=m}
-async function revisar(){try{const {data,error}=await claridadSupabase.auth.getSession();if(error)throw error;const logged=!!data.session;salir.hidden=!logged;enviar.hidden=logged;aviso(logged?"Sesión iniciada correctamente.":"Sin sesión activa.");}catch(e){aviso("Error: "+e.message)}}
+async function revisar(){try{const {data,error}=await claridadSupabase.auth.getSession();if(error)throw error;const logged=!!data.session;salir.hidden=!logged;enviar.hidden=logged;aviso(logged?"Sesión iniciada correctamente con correo: "+(data.session.user?.email||"correo verificado"):"Sin sesión activa. Puedes entrar con tu correo sin utilizar ChatGPT.");if(logged && /(?:access_token|refresh_token|type|error_description)=/.test(location.hash)){history.replaceState(null,"",location.pathname+location.search)}}catch(e){aviso("Error: "+e.message)}}
 enviar.onclick=async()=>{enviar.disabled=true;try{await enviarEnlaceCorreo(document.querySelector("#correo").value.trim(),location.origin+location.pathname);aviso("Solicitud enviada. Revisa tu correo. Si no llega, comprueba las restricciones de envío de Supabase.");}catch(e){aviso("Error: "+e.message)}finally{enviar.disabled=false}};
 salir.onclick=async()=>{try{await cerrarSesion();await revisar()}catch(e){aviso("Error: "+e.message)}};
-claridadSupabase.auth.onAuthStateChange(()=>{void revisar()});await revisar();
+claridadSupabase.auth.onAuthStateChange(()=>{void revisar()});await claridadSupabase.auth.initialize();await revisar();
 </script></body></html>
